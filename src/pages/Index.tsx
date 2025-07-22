@@ -1,12 +1,27 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import Header from '@/components/Header';
+import MapSection from '@/components/MapSection';
+import ChatSection from '@/components/ChatSection';
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <Header />
+      
+      <main className="h-[calc(100vh-4rem)]">
+        <div className="h-full max-w-7xl mx-auto p-4">
+          <div className="h-full grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Map Section */}
+            <div className="h-full min-h-[50vh] lg:min-h-full">
+              <MapSection />
+            </div>
+            
+            {/* Chat Section */}
+            <div className="h-full min-h-[50vh] lg:min-h-full">
+              <ChatSection />
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
   );
 };
