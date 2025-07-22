@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Clock, MapPin, Coffee, UtensilsCrossed, Car } from 'lucide-react';
+import { Send, Clock, MapPin, Coffee, UtensilsCrossed, Car, Key, Settings } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface Message {
   id: string;
@@ -22,9 +23,90 @@ const ChatSection = () => {
     }
   ]);
   const [inputValue, setInputValue] = useState('');
+  const [apiKey, setApiKey] = useState('');
+  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
-  const handleSendMessage = () => {
+  useEffect(() => {
+    const savedApiKey = localStorage.getItem('openai_api_key');
+    if (savedApiKey) {
+      setApiKey(savedApiKey);
+    } else {
+      setShowApiKeyInput(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const saveApiKey = () => {
+    if (!apiKey.trim()) {
+      toast({
+        title: "API Key Required",
+        description: "Please enter your OpenAI API key to use the chat.",
+        variant: "destructive"
+      });
+      return;
+    }
+    localStorage.setItem('openai_api_key', apiKey);
+    setShowApiKeyInput(false);
+    toast({
+      title: "API Key Saved",
+      description: "You can now start chatting with the AI assistant!"
+    });
+  };
+
+  const callOpenAI = async (userMessage: string) => {
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4-turbo-preview',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a helpful travel assistant that helps users plan their itineraries. Be concise, friendly, and focus on providing specific recommendations with times and locations when possible. Keep responses under 100 words.'
+            },
+            {
+              role: 'user',
+              content: userMessage
+            }
+          ],
+          max_tokens: 200,
+          temperature: 0.7,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`OpenAI API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.choices[0]?.message?.content || "I'm sorry, I couldn't generate a response.";
+    } catch (error) {
+      console.error('OpenAI API error:', error);
+      throw error;
+    }
+  };
+
+  const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
+    if (!apiKey) {
+      setShowApiKeyInput(true);
+      toast({
+        title: "API Key Required",
+        description: "Please enter your OpenAI API key first.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -33,18 +115,38 @@ const ChatSection = () => {
       timestamp: new Date()
     };
 
-    // Mock AI response
-    const aiResponse: Message = {
-      id: (Date.now() + 1).toString(),
-      type: 'itinerary',
-      content: `Great idea! I've found some options for "${inputValue}". Let me create a route for you.`,
-      timestamp: new Date(),
-      location: "Central Park",
-      time: "2:30 PM"
-    };
-
-    setMessages(prev => [...prev, userMessage, aiResponse]);
+    setMessages(prev => [...prev, userMessage]);
     setInputValue('');
+    setIsLoading(true);
+
+    try {
+      const aiContent = await callOpenAI(inputValue);
+      
+      const aiResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'itinerary',
+        content: aiContent,
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, aiResponse]);
+    } catch (error) {
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'system',
+        content: "Sorry, I'm having trouble connecting to the AI service. Please check your API key and try again.",
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+      
+      toast({
+        title: "Connection Error",
+        description: "Failed to get AI response. Please check your API key.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const getMessageIcon = (type: string) => {
@@ -60,14 +162,56 @@ const ChatSection = () => {
     <div className="h-full flex flex-col bg-card rounded-lg shadow-lg overflow-hidden">
       {/* Chat Header */}
       <div className="p-4 bg-gradient-to-r from-secondary/5 to-accent/5 border-b border-border">
-        <h3 className="font-semibold text-foreground flex items-center gap-2">
-          <UtensilsCrossed className="h-5 w-5 text-secondary" />
-          Plan Your Day
-        </h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          Describe your ideal itinerary and I'll map it out for you
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold text-foreground flex items-center gap-2">
+              <UtensilsCrossed className="h-5 w-5 text-secondary" />
+              Plan Your Day
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Describe your ideal itinerary and I'll map it out for you
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowApiKeyInput(!showApiKeyInput)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
+
+      {/* API Key Input */}
+      {showApiKeyInput && (
+        <div className="p-4 bg-muted/20 border-b border-border">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+              <Key className="h-4 w-4" />
+              OpenAI API Key
+            </div>
+            <div className="flex gap-2">
+              <Input
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="sk-..."
+                className="flex-1"
+              />
+              <Button onClick={saveApiKey} size="sm">
+                Save
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Your API key is stored locally and never sent to our servers. Get yours at{' '}
+              <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="underline">
+                OpenAI Platform
+              </a>
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -128,10 +272,30 @@ const ChatSection = () => {
               <div className="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
                 <Clock className="h-4 w-4 text-primary" />
               </div>
-            )}
-          </div>
-        ))}
-      </div>
+             )}
+           </div>
+         ))}
+         
+         {isLoading && (
+           <div className="flex justify-start">
+             <div className="flex-shrink-0 w-8 h-8 bg-secondary/10 rounded-full flex items-center justify-center">
+               <Coffee className="h-4 w-4 text-accent" />
+             </div>
+             <div className="max-w-[80%] rounded-lg p-3 bg-gradient-to-r from-secondary/10 to-accent/10 border border-border ml-3">
+               <div className="flex items-center gap-2">
+                 <div className="animate-pulse flex space-x-1">
+                   <div className="rounded-full bg-accent h-2 w-2"></div>
+                   <div className="rounded-full bg-accent h-2 w-2"></div>
+                   <div className="rounded-full bg-accent h-2 w-2"></div>
+                 </div>
+                 <span className="text-sm text-muted-foreground">AI is thinking...</span>
+               </div>
+             </div>
+           </div>
+         )}
+         
+         <div ref={messagesEndRef} />
+       </div>
 
       {/* Sample Itinerary Timeline */}
       <div className="p-4 bg-gradient-to-r from-muted/50 to-background border-t border-border">
