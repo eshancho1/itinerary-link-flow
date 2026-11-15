@@ -1,73 +1,40 @@
-# Welcome to your Lovable project
+# Link · Itinerary Planner
 
-## Project info
+Plan a day out with an AI chat assistant and see it laid out on a map.
 
-**URL**: https://lovable.dev/projects/3df09a52-0ec7-413f-abb0-18da31a0a10d
+## North star
 
-## How can I edit this code?
+**People go out and enjoy the day they imagined, nearby and on time.**
 
-There are several ways of editing your application.
+**Metric:** itineraries planned with a mapped route each week.
 
-**Use Lovable**
+## What it does (MVP)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/3df09a52-0ec7-413f-abb0-18da31a0a10d) and start prompting.
+- **Chat:** describe the day you want, and an LLM (OpenAI) suggests an itinerary.
+- **Map:** a placeholder map panel with clickable pins. It isn't connected to a real map provider or to the chat yet.
+- **Header actions:** New, Save and Share (the UI is there; they don't do anything yet).
 
-Changes made via Lovable will be committed automatically to this repo.
+The OpenAI API key is entered in the app at runtime and stored only in the browser's `localStorage`. No key is committed to this repo.
 
-**Use your preferred IDE**
+## Tech stack
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Vite · React · TypeScript · Tailwind CSS · shadcn/ui
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Getting started
 
-Follow these steps:
+Requires Node.js 18+ and npm.
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+git clone https://github.com/eshancho1/itinerary-link-flow.git
+cd itinerary-link-flow
+npm install
+npm run dev        # http://localhost:8080
 ```
 
-**Edit a file directly in GitHub**
+Other scripts:
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/3df09a52-0ec7-413f-abb0-18da31a0a10d) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+```sh
+npm run build      # production build to dist/
+npm run preview    # serve the production build
+npm run lint
+```
