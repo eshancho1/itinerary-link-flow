@@ -2,9 +2,17 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { MapPin, Circle, Navigation } from 'lucide-react';
 
-const MapSection = () => {
-  const [startPoint, setStartPoint] = useState<{ lat: number; lng: number } | null>(null);
+type MapSectionProps = {
+  /** Demo mode: show the pin on a sample area (mock map until M2). */
+  demoArea?: { name: string; radiusKm: number };
+};
+
+const MapSection = ({ demoArea }: MapSectionProps) => {
+  const [clickedPoint, setStartPoint] = useState<{ lat: number; lng: number } | null>(null);
+  const startPoint = demoArea ? true : clickedPoint;
   const [radius, setRadius] = useState(5);
+
+  const ring = demoArea ? 160 : radius * 8;
 
   const handleMapClick = (event: React.MouseEvent<HTMLDivElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -68,6 +76,14 @@ const MapSection = () => {
           </svg>
         </div>
 
+        {/* Demo area label */}
+        {demoArea && (
+          <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-card/90 backdrop-blur-sm rounded-full border border-border text-xs font-medium text-foreground flex items-center gap-1.5">
+            <MapPin className="h-3 w-3 text-primary" />
+            {demoArea.name}
+          </div>
+        )}
+
         {/* Start Point Marker */}
         {startPoint && (
           <div 
@@ -82,10 +98,10 @@ const MapSection = () => {
               <div 
                 className="absolute inset-0 border-2 border-primary/30 rounded-full animate-ping"
                 style={{
-                  width: `${radius * 8}px`,
-                  height: `${radius * 8}px`,
-                  marginLeft: `-${radius * 4 - 12}px`,
-                  marginTop: `-${radius * 4 - 12}px`
+                  width: `${ring}px`,
+                  height: `${ring}px`,
+                  marginLeft: `-${ring / 2 - 12}px`,
+                  marginTop: `-${ring / 2 - 12}px`
                 }}
               ></div>
             </div>
@@ -121,7 +137,12 @@ const MapSection = () => {
 
       {/* Status Bar */}
       <div className="p-3 bg-muted/50 text-sm text-muted-foreground">
-        {startPoint ? (
+        {demoArea ? (
+          <span className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-secondary rounded-full"></div>
+            Sample area • {demoArea.name} • {demoArea.radiusKm} km radius
+          </span>
+        ) : startPoint ? (
           <span className="flex items-center gap-2">
             <div className="w-2 h-2 bg-primary rounded-full"></div>
             Start point set • {radius}km radius • Ready to plan

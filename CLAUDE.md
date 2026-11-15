@@ -25,13 +25,14 @@ npm test         # vitest run
 - `src/components/Header.tsx`, `MapSection.tsx`: existing Lovable UI (map is still a mock until M2)
 - `src/components/ChatSection.tsx`: legacy OpenAI chat, shown only when demo mode is off; removed in M3
 - `src/components/results/`: reusable results UI: `ResultsPanel`, `OptionCard`, `StopRow`, `LegRow`. M3's flow and M8's lock-in screen should reuse these, not rebuild them
-- `src/types/plan.ts`: the PRD data model. Keep it in sync with PRD.md
-- `src/demo/`: demo mode: hand-made places and plans for East Village, Williamsburg and West Village
-- `src/lib/demo-mode.ts`: `?demo=1` / toggle handling
+- `src/types/plan.ts`: the PRD data model. Keep it in sync with PRD.md. `Place` has two display-only extras (`address`, `category`) beyond the PRD
+- `src/demo/`: demo mode. `places.ts` (hand-typed places), `plans.ts` (hand-picked options per area × plan type; times via the PRD split, walk minutes estimated in `src/lib/geo.ts`), `DemoResults.tsx` (area + plan-type chips → `ResultsPanel`), `plans.test.ts`
+- `src/lib/labels.ts`: display labels for plan types, vibes, stop kinds; `MAX_OPTIONS`
+- `src/lib/demo-mode.ts`: `?demo=1` / header toggle (`&area=` and `&type=` pick the demo scenario)
 
 ## Demo mode
 
-`?demo=1` (or the header toggle) runs the app on hand-made sample data with no API calls. A "Sample data" badge must always be visible in demo mode. Sample places are hand-typed, long-running, well-known NYC spots. **Never save real Google API responses as sample data** (Google terms). Place IDs in demo data are fake (`demo-ev-001`).
+`?demo=1` (or the header toggle) runs the app on hand-made sample data with no API calls. A "Sample data" badge must always be visible in demo mode. Sample places are hand-typed, long-running, well-known NYC spots. **Never save real Google API responses as sample data** (Google terms). Place IDs in demo data are fake (`demo-ev-veselka`).
 
 ## Rules
 
